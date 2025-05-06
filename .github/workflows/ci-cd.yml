@@ -1,25 +1,23 @@
-name: CI/CD Pipeline
+name: CI/CD GrossToNet
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Install dependencies
         run: |
@@ -27,6 +25,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run tests
+      - name: Clean pycache
+        run: |
+          find . -type d -name '__pycache__' -exec rm -r {} +
+          find . -type f -name '*.pyc' -delete
+
+      - name: Run tests with pytest
         run: |
           pytest
