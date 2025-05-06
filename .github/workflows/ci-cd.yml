@@ -3,36 +3,30 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Chạy khi có thay đổi trên nhánh main
+      - main
   pull_request:
     branches:
-      - main  # Chạy khi có pull request vào nhánh main
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Sử dụng Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2  # Kiểm tra mã nguồn từ repo
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'  # Cài đặt Python 3.9
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt  # Cài đặt các thư viện trong requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
 
       - name: Run tests
         run: |
-          source venv/bin/activate
-          pytest  # Chạy test
-
-      - name: Deploy to server (optional)
-        run: |
-          echo "Deploying application..."  # Lệnh deploy của bạn
-        if: github.ref == 'refs/heads/main'  # Chỉ deploy khi có thay đổi trên nhánh main
+          pytest
