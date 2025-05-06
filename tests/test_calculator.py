@@ -51,10 +51,10 @@ def test_region_4_minimum_wage_level():
     assert result.taxable_income == 0
 
 def test_invalid_region_raises_error():
-    input_data = GrossNetInput(gross_income=10_000_000, num_dependents=0, region=5)
-    with pytest.raises(ValueError, match="Invalid region: 5"):
-        calculate_gross_to_net(input_data)
-
+    with pytest.raises(ValueError) as exc_info:
+        GrossNetInput(gross_income=10_000_000, num_dependents=0, region=5)
+    
+    assert "region" in str(exc_info.value)
 # @pytest.mark.skip(reason="Excel test data file not implemented/available")
 # def test_gross_to_net_from_excel():
 #     data_file = Path(__file__).parent / "data/data_test_gross_net.xlsx"
