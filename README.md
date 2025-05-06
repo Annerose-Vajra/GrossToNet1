@@ -238,7 +238,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 @CCN-HUST
-Computation & Communication Networking
+Computation & Communication Neworking
 
 ```
 
