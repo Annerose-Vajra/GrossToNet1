@@ -7,6 +7,19 @@ services:
     plan: free  # Hoặc chọn plan phù hợp với nhu cầu
     envVars:
       - key: DATABASE_URL
-        value: "postgresql://user:password@hostname:port/dbname"  # Nếu bạn dùng database
+        value: "postgresql://user:password@hostname:port/dbname"  # Nếu bạn sử dụng database
     instances: 1
     regions: oregon  # Chọn region bạn muốn
+
+  - type: web
+    name: streamlit-app
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run frontend/app.py"
+    plan: free  # Hoặc chọn plan phù hợp với nhu cầu
+    envVars:
+      - key: BACKEND_API_URL
+        value: "https://grosstonet1.onrender.com"  # URL của backend
+    instances: 1
+    regions: oregon  # Chọn region bạn muốn
+
