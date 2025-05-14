@@ -14,7 +14,7 @@ services:
   - type: web
     name: streamlit-app
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt && streamlit run frontend/app.py"
     startCommand: "streamlit run frontend/app.py"
     plan: free  # Hoặc chọn plan phù hợp với nhu cầu
     envVars:
