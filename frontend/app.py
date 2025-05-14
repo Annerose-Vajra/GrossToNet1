@@ -2,9 +2,155 @@ import streamlit as st
 import pandas as pd
 import io
 import datetime
-from core.models import GrossNetInput, GrossNetResult, InsuranceBreakdown
-from core.calculator import calculate_gross_to_net
-from core.constants import REGIONAL_MINIMUM_WAGES
+import os
+import sys
+from pydantic import BaseModel, Field, model_validator
+from typing import Optional
+
+class GrossNetInput(BaseModel):
+    """Input data for Gross to Net calculation."""
+    gross_income: float = Field(..., gt=0, description="Gross monthly income in VND")
+    num_dependents: int = Field(..., ge=0, description="Number of registered dependents")
+    region: int = Field(..., ge=1, le=4, description="Region (1, 2, 3, or 4)")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "summary": "Basic Example",
+                    "description": "Calculate for 30M VND Gross, 1 Dependent, Region 1.",
+                    "value": {"gross_income": 30000000, "num_dependents": 1, "region": 1},
+                },
+                {
+                    "summary": "No Dependents Example",
+                    "description": "Calculate for 20M VND Gross, 0 Dependents, Region 1.",
+                    "value": {"gross_income": 20000000, "num_dependents": 0, "region": 1},
+                },
+            ]
+        }
+    }
+
+class InsuranceBreakdown(BaseModel):
+    """Breakdown of calculated insurance contributions (employee share)."""
+    social_insurance: float = Field(..., description="BHXH contribution in VND")
+    health_insurance: float = Field(..., description="BHYT contribution in VND")
+    unemployment_insurance: float = Field(..., description="BHTN contribution in VND")
+    total: float = Field(..., description="Total employee insurance contribution in VND")
+
+class GrossNetResult(BaseModel):
+    """Output data for Gross to Net calculation."""
+    gross_income: float = Field(..., description="Original Gross Income in VND")
+    net_income: float = Field(..., description="Calculated Net Income (Take-home pay) in VND")
+    personal_income_tax: float = Field(..., description="Calculated Personal Income Tax (PIT) in VND")
+    total_insurance_contribution: float = Field(..., description="Total employee insurance contribution in VND")
+    insurance_breakdown: InsuranceBreakdown = Field(..., description="Detailed insurance breakdown")
+    taxable_income: float = Field(..., description="Income subject to PIT calculation in VND")
+    pre_tax_income: float = Field(..., description="Income after insurance but before allowances in VND")
+
+PERSONAL_ALLOWANCE = 11_000_000
+DEPENDENT_ALLOWANCE = 4_400_000
+
+RATE_SOCIAL_INSURANCE = 0.08
+RATE_HEALTH_INSURANCE = 0.015
+RATE_UNEMPLOYMENT_INSURANCE = 0.01
+
+BASE_SALARY_FOR_CAPS = 2_340_000
+BHXH_BHYT_CAP_MULTIPLIER = 20
+BHTN_CAP_MULTIPLIER = 20
+
+BHXH_BHYT_MAX_BASE = BASE_SALARY_FOR_CAPS * BHXH_BHYT_CAP_MULTIPLIER
+
+REGIONAL_MINIMUM_WAGES = {
+    1: 4_960_000,
+    2: 4_410_000,
+    3: 3_860_000,
+    4: 3_450_000,
+}
+
+PIT_BRACKETS = [
+    {"limit": 5_000_000, "rate": 0.05, "deduction": 0},
+    {"limit": 10_000_000, "rate": 0.10, "deduction": 250_000},
+    {"limit": 18_000_000, "rate": 0.15, "deduction": 750_000},
+    {"limit": 32_000_000, "rate": 0.20, "deduction": 1_650_000},
+    {"limit": 52_000_000, "rate": 0.25, "deduction": 3_250_000},
+    {"limit": 80_000_000, "rate": 0.30, "deduction": 5_850_000},
+    {"limit": float('inf'), "rate": 0.35, "deduction": 9_850_000},
+]
+
+def calculate_gross_to_net(data: GrossNetInput) -> GrossNetResult:
+    """
+    Calculates Net Income from Gross Income based on Vietnamese regulations (Apr 2025).
+
+    Args:
+        data: A GrossNetInput Pydantic model containing calculation inputs.
+
+    Returns:
+        A GrossNetResult Pydantic model containing the calculated results.
+
+    Raises:
+        ValueError: If the provided region is invalid.
+    """
+    gross_income = data.gross_income
+    num_dependents = data.num_dependents
+    region = data.region
+
+    if region not in REGIONAL_MINIMUM_WAGES:
+        raise ValueError(f"Invalid region: {region}. Must be 1, 2, 3, or 4.")
+    regional_min_wage = REGIONAL_MINIMUM_WAGES[region]
+
+    insurance_base_input = gross_income
+    insurance_base = max(insurance_base_input, regional_min_wage)
+
+    bhxh_bhyt_cap = BHXH_BHYT_MAX_BASE
+    bhtn_cap = regional_min_wage * BHTN_CAP_MULTIPLIER
+
+    salary_base_bhxh_bhyt = max(min(insurance_base, bhxh_bhyt_cap), regional_min_wage)
+    salary_base_bhtn = max(min(insurance_base, bhtn_cap), regional_min_wage)
+
+    bhxh = salary_base_bhxh_bhyt * RATE_SOCIAL_INSURANCE
+    bhyt = salary_base_bhxh_bhyt * RATE_HEALTH_INSURANCE
+    bhtn = salary_base_bhtn * RATE_UNEMPLOYMENT_INSURANCE
+    total_insurance = bhxh + bhyt + bhtn
+
+    insurance_breakdown = InsuranceBreakdown(
+        social_insurance=round(bhxh),
+        health_insurance=round(bhyt),
+        unemployment_insurance=round(bhtn),
+        total=round(total_insurance)
+    )
+
+    pre_tax_income = gross_income - total_insurance
+
+    personal_allowance = PERSONAL_ALLOWANCE
+    dependent_allowance_total = num_dependents * DEPENDENT_ALLOWANCE
+    total_allowances = personal_allowance + dependent_allowance_total
+
+    taxable_income = pre_tax_income - total_allowances
+    taxable_income = max(0, taxable_income)
+
+    pit = 0.0
+    previous_limit = 0
+    for bracket in PIT_BRACKETS:
+        if taxable_income > previous_limit:
+            taxable_at_current_rate = min(taxable_income, bracket["limit"]) - previous_limit
+            pit += taxable_at_current_rate * bracket["rate"]
+        else:
+             break
+        previous_limit = bracket["limit"]
+
+    pit = max(0, round(pit))
+
+    net_income = gross_income - total_insurance - pit
+
+    return GrossNetResult(
+        gross_income=round(gross_income),
+        net_income=round(net_income),
+        personal_income_tax=pit,
+        total_insurance_contribution=insurance_breakdown.total,
+        insurance_breakdown=insurance_breakdown,
+        taxable_income=round(taxable_income),
+        pre_tax_income=round(pre_tax_income),
+    )
 
 EXPECTED_COLUMNS = {
     'gross': 'GrossIncome',
