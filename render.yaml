@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: fastapi-app
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn api.main:app --host 0.0.0.0 --port 8000"
+    plan: free  # Hoặc chọn plan phù hợp với nhu cầu
+    envVars:
+      - key: DATABASE_URL
+        value: "postgresql://user:password@hostname:port/dbname"  # Nếu bạn dùng database
+    instances: 1
+    regions: oregon  # Chọn region bạn muốn
