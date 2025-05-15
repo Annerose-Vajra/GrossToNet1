@@ -1,244 +1,173 @@
-# Vietnam Gross Net Income Calculator (`vn_gross_net_calculator`)
+# Gross-To-Net Income Calculator (Vietnam)
 
-This project provides a tool to calculate Vietnamese Net income from Gross income based on regulations applicable around **April 2025** (current date: Saturday, April 19, 2025 at 12:12 AM +07).
-
-It includes:
-
-1.  A core Python package (`core/`) for the calculation logic (Backend Logic).
-2.  A web UI built with Streamlit (`frontend/app.py`) supporting single calculations and batch processing via Excel upload.
-3.  A RESTful web API built with FastAPI (`api/`) to access the single calculation logic programmatically.
-
-> **Disclaimer:**
-> Calculation logic is based on publicly available information (e.g., Decree 74/2024/ND-CP, Resolution 954/2020/UBTVQH14, standard insurance rates) and interpretations current as of April 2025.  
-> The base salary for the BHXH/BHYT cap uses 2,340,000 VND based on UI hints/potential reforms.  
-> This tool is for informational purposes only. Always consult official sources or a qualified professional for financial decisions.  
-> **Location context: Hanoi, Vietnam.**
+This project is a comprehensive tool to calculate Vietnamese **Net Income** from **Gross Income**, including Personal Income Tax (PIT), social insurance, health insurance, and unemployment insurance, following the latest Vietnamese regulations effective from 2025.
 
 ---
 
 ## Features
 
-* Calculates Net Income, Personal Income Tax (PIT), and mandatory insurance contributions (BHXH, BHYT, BHTN).
-* Accounts for personal and dependent allowances.
-* Considers regional minimum wages for insurance caps.
-* Provides a Streamlit Web UI (Frontend) with:
-  * Single calculation input.
-  * Batch calculation via **Excel file upload** (`.xlsx`, `.xls`).
-  * Downloadable results (CSV, Excel).
-* Provides a FastAPI Web API for single calculations (`POST /calculate/gross-to-net`).
-* Includes Docker configuration (`Dockerfile`s and `docker-compose.yml`) for containerized development and deployment.
+- **Single Calculation:** Calculate net salary with detailed breakdown of taxes and insurance.
+- **Batch Processing:** Upload Excel files for bulk calculations and download reports.
+- **REST API:** FastAPI backend exposing calculation endpoints.
+- **Interactive Frontend:** Streamlit UI for easy user input and result visualization.
+- **Saved Calculations:** CRUD operations to manage calculation records.
+- **Containerized:** Docker support for easy deployment.
+- **Deployable:** Ready to deploy on Render.com or similar platforms.
 
 ---
 
-## Setup
+## Technology Stack
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/sub2pewds12/Gross-to-Net-Converter
-cd vn_gross_net_calculator
-Annerose, mình đã giải quyết xung đột cho bạn. Đây là nội dung file `README.md` sau khi đã xử lý:
-
-````md
-# Vietnam Gross Net Income Calculator (`vn_gross_net_calculator`)
-
-This project provides a tool to calculate Vietnamese Net income from Gross income based on regulations applicable around **April 2025** (current date: Saturday, April 19, 2025 at 12:12 AM +07).
-
-It includes:
-
-1.  A core Python package (`core/`) for the calculation logic (Backend Logic).
-2.  A web UI built with Streamlit (`frontend/app.py`) supporting single calculations and batch processing via Excel upload.
-3.  A RESTful web API built with FastAPI (`api/`) to access the single calculation logic programmatically.
-
-> **Disclaimer:**
-> Calculation logic is based on publicly available information (e.g., Decree 74/2024/ND-CP, Resolution 954/2020/UBTVQH14, standard insurance rates) and interpretations current as of April 2025.  
-> The base salary for the BHXH/BHYT cap uses 2,340,000 VND based on UI hints/potential reforms.  
-> This tool is for informational purposes only. Always consult official sources or a qualified professional for financial decisions.  
-> **Location context: Hanoi, Vietnam.**
+- Python 3.11+
+- FastAPI for backend API
+- Streamlit for frontend UI
+- Docker for containerization
+- PostgreSQL (optional) for persistent storage
+- Render.com for cloud deployment
 
 ---
 
-## Features
+## Getting Started
 
-* Calculates Net Income, Personal Income Tax (PIT), and mandatory insurance contributions (BHXH, BHYT, BHTN).
-* Accounts for personal and dependent allowances.
-* Considers regional minimum wages for insurance caps.
-* Provides a Streamlit Web UI (Frontend) with:
-  * Single calculation input.
-  * Batch calculation via **Excel file upload** (`.xlsx`, `.xls`).
-  * Downloadable results (CSV, Excel).
-* Provides a FastAPI Web API for single calculations (`POST /calculate/gross-to-net`).
-* Includes Docker configuration (`Dockerfile`s and `docker-compose.yml`) for containerized development and deployment.
+### Prerequisites
 
----
+- Python 3.11+
+- Git
+- Docker (optional, for containerized setup)
+- Virtual environment tool (venv, conda, etc.)
 
-## Setup
+### Installation
 
-### 1. Clone the repository
-
+### 1. Clone the repository:
 ```bash
-git clone https://github.com/sub2pewds12/Gross-to-Net-Converter
-cd vn_gross_net_calculator
-````
+git clone https://github.com/Annerose-Vajra/GrossToNet1.git
+cd GrossToNet1
+```
+### 2. Create and activate a virtual environment:
 
-### 2. Create a virtual environment (recommended)
+On Windows (PowerShell):
 
-```bash
+```powershell
 python -m venv .venv
-source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
+.\.venv\Scripts\activate
 ```
-
-### 3. Install dependencies
-
-#### Using uv (recommended)
+On Linux/macOS:
 
 ```bash
-pip install uv
-uv pip install \
-  "streamlit>=1.20.0" \
-  "fastapi>=0.90.0" \
-  "uvicorn[standard]>=0.20.0" \
-  "pydantic>=2.0.0" \
-  "pandas>=1.5.0" \
-  "openpyxl>=3.0.0"
-# Optional: For testing
-uv pip install "pytest>=7.0.0" "requests>=2.20.0"
+python3 -m venv .venv
+source .venv/bin/activate
 ```
-
-#### Using pip
+### 3. Install required Python packages:
 
 ```bash
-# Install runtime and test dependencies from pyproject.toml
-pip install .[test]
-
-# Or just runtime dependencies
-pip install .`
-
-# Or from requirements.txt
 pip install -r requirements.txt
 ```
-
----
-
-## Running the Application
-
-### Option 1: Using Docker Compose (Recommended)
-
-Ensure Docker is installed. In the project root:
+### 4. Run the backend server locally:
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+uvicorn api.main:app --reload
 ```
-
-* Web UI: [http://localhost:8501](http://localhost:8501)
-* API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-To stop and clean up:
-
-```bash
-docker compose -f docker/docker-compose.yml down
-```
-
-### Option 2: Manually without Docker
-
-#### Run API:
-
-```bash
-uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Visit: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-#### Run Frontend:
-
+### 5. Run the frontend app locally:
 ```bash
 streamlit run frontend/app.py
 ```
+## Usage
+  -Access the frontend UI at http://localhost:8501.
+  
+  - Input Gross Income, number of dependents, and region.
+  
+  - View detailed tax and insurance breakdowns.
+  
+  - Export results as Excel or CSV.
+  
+  - Use backend REST API for programmatic access.
 
-Visit: [http://localhost:8501](http://localhost:8501)
+## CI/CD Pipeline
+The project uses GitHub Actions to automate testing and deployment:
 
-### Option 3: Using Pre-Built Docker Images
+ Continuous Integration (CI):
 
-Create a `docker-compose-run.yml`:
+  - Automatically runs on code push.
 
-```yaml
-services:
-  api:
-    image: leanhkhoi1010/vn-gross-net-api:latest
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
+  - Checks out code.
 
-  frontend:
-    image: leanhkhoi1010/vn-gross-net-frontend:latest
-    ports:
-      - "8501:8501"
-    depends_on:
-      - api
-    restart: unless-stopped
-```
+  - Sets up Python environment.
 
-Run:
+  - Installs dependencies.
+
+  - Runs linting and tests.
+
+  - Builds Docker images (optional).
+
+Continuous Deployment (CD):
+
+  - Deploys the application to Render.com after successful CI.
+
+  - Runs health checks and notifies on success or failure.
+
+## Deploying on Render.com
+### 1. Create a Render account if you don’t have one at https://render.com.
+
+### 2. Connect your GitHub repository:
+
+ - Go to Render Dashboard → New Web Service.
+
+ - Select GitHub and authorize.
+
+ - Choose the GrossToNet1 repository.
+
+### 3. Configure the Web Service:
+
+ - Name: e.g., grossnet-api for backend, grossnet-frontend for frontend.
+  
+ - Region: select nearest to your users (e.g., Oregon).
+  
+ - Branch: main.
+  
+ - Environment: Python.
+
+### 4. Set Build Commands:
+
+Backend:
 
 ```bash
-docker compose -f docker-compose-run.yml pull
-docker compose -f docker-compose-run.yml up -d
+pip install -r requirements.txt
 ```
-
-To stop:
+Frontend:
 
 ```bash
-docker compose -f docker-compose-run.yml down
+pip install -r requirements.txt
 ```
+### 5. Set Start Commands:
 
----
-
-## Running Tests
-
-Ensure dependencies are installed:
+Backend:
 
 ```bash
-pytest
+uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
+Frontend:
 
----
-
-## Project Structure
-
+```bash
+streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
 ```
-vn_gross_net_calculator/
-├── api/            # FastAPI application code
-│   └── routers/
-│       └── gross_net.py
-├── core/           # Calculation logic
-│   ├── calculator.py
-│   ├── constants.py
-│   └── models.py
-├── docker/         # Docker config
-├── frontend/       # Streamlit UI
-│   └── app.py
-├── tests/          # Automated tests
-│   └── data/data_test_gross_net.xlsx
-├── .gitignore
-├── .dockerignore
-├── LICENSE
-├── pyproject.toml
-├── README.md
-└── requirements.txt
-```
+### 6. Add Environment Variables:
 
----
+ - For example: DATABASE_URL for your database connection string.
+
+ - BACKEND_API_URL for frontend to communicate with backend.
+
+### 7. Deploy and monitor:
+
+ - Click Create Web Service.
+  
+ - Monitor build logs and application status.
+  
+ - Access your app via Render-provided URLs.
 
 ## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome!
+Please submit pull requests or open issues.
+Ensure code follows style guidelines and tests are added for new features.
 
 ## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-@CCN-HUST
-Computation & Communication Networking
-
-```
-
+This project is licensed under the MIT License.
