@@ -1,6 +1,6 @@
 # Gross-To-Net Income Calculator (Vietnam)
 
-This project is a comprehensive tool to calculate Vietnamese **Net Income** from **Gross Income**, including Personal Income Tax (PIT), social insurance, health insurance, and unemployment insurance, following the latest Vietnamese regulations effective from 2025.
+This project a comprehensive tool to calculate Vietnamese **Net Income** from **Gross Income**, including Personal Income Tax (PIT), social insurance, health insurance, and unemployment insurance, following the latest Vietnamese regulations effective from 2025.
 
 ---
 
